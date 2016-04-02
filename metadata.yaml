@@ -13,7 +13,7 @@ serial_number: '013'
 doc_id: 'DMTN-013'
 
 # Title of the document, without the series/serial designation
-doc_title: 'Wrapping C++ with Cython'
+doc_title: 'Wrapping C++ with Cython (draft)'
 
 # Author names, ordered as a list. Each author name should be formatted as 'First Last'
 authors:
