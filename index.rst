@@ -192,7 +192,7 @@ One can get around this by placing the extern block in a separate ``.pxd`` file 
 
 .. code-block:: cython
 
-    from _basics.pxd cimport Doodad as _Doodad
+    from _basics cimport Doodad as _Doodad
 
 to the top of the ``.pxd`` file. Then ``_Doodad`` refers to the C++ class while ``Doodad`` can be used for Python.
 
