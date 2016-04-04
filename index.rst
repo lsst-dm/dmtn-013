@@ -482,7 +482,7 @@ Therefore in the SWIG module the following needs to be added
 Another problem is linking. In particular, linking on OSX. Since OSX has the concept of bundles (i.e. ``.so``) and dynamic libraries (i.e. ``.dylib``) things get interesting.
 By default Cython builds bundles. Which is the sensible thing to do because extension modules is what bundles are meant for.
 However, now ``basics`` is not only an extension module but also a library, that our SWIG module wants to link to.
-Thus we need to tell Cython that on OSX we want a dynamic library instead (while still calling the resulting thing ``basics.so``). This is done by adding the following to ``setup.py``.
+There are two solutions. Either we tell Cython that on OSX we want a dynamic library instead (while still calling the resulting thing ``basics.so``). This is done by adding the following to ``setup.py``.
 
 .. code-block:: python
 
@@ -511,6 +511,31 @@ The SWIG module can now be built with.
             os.path.join('challenge', 'basics.so')
         ]
     )
+
+Or, as an alternative we can choose not to link to ``basics.so`` and instead tell
+the linker to resolve all symbols when the modules are imported.
+This can be done by inserting the following in the packages ``__init__.py`` file.
+
+.. code-block:: python
+
+    import sys
+    
+    # This sequence will get a lot cleaner for Python 3, for which the necessary
+    # flags should all be in the os module.
+    import ctypes
+    flags = ctypes.RTLD_GLOBAL
+    try:
+        import DLFCN
+        flags |= DLFCN.RTLD_NOW
+    except ImportError:
+        flags |= 0x2  # works for Linux and Mac, only platforms I care about now.
+    sys.setdlopenflags(flags)
+    
+    # Ensure basics is loaded first, since we need its
+    # symbols for anything else.
+    from . import basics
+
+This approach is better since it does not require separate handling of OSX.
 
 Example of generated code
 =========================
