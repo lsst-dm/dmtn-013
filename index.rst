@@ -508,6 +508,116 @@ The SWIG module can now be built with.
         ]
     )
 
+Example of generated code
+=========================
+
+From a Cython input file the Cython compiler typically generates a single
+C++ source file as output (without any additional Python code). This is then
+directly compiled into a CPython extension module.
+For example, from the ``Doodad`` method wrapper ``clone()`` which is defined
+in the ``.pyx`` file as:
+
+.. code-block:: cython
+
+    def clone(self):
+        d = Doodad(init=False)
+
+        d.thisptr = move(deref(self.thisptr).clone())
+
+        return d
+
+the generated code looks like this.
+
+.. code-block:: cpp
+
+    /* "challenge/basics.pyx":50
+     * 
+     *     def clone(self):             # <<<<<<<<<<<<<<
+     *         d = Doodad(init=False)
+     * 
+     */
+    
+    /* Python wrapper */
+    static PyObject *__pyx_pw_9challenge_6basics_6Doodad_5clone(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+    static PyObject *__pyx_pw_9challenge_6basics_6Doodad_5clone(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+      PyObject *__pyx_r = 0;
+      __Pyx_RefNannyDeclarations
+      __Pyx_RefNannySetupContext("clone (wrapper)", 0);
+      __pyx_r = __pyx_pf_9challenge_6basics_6Doodad_4clone(((struct __pyx_obj_9challenge_6basics_Doodad *)__pyx_v_self));
+    
+      /* function exit code */
+      __Pyx_RefNannyFinishContext();
+      return __pyx_r;
+    }
+    
+    static PyObject *__pyx_pf_9challenge_6basics_6Doodad_4clone(struct __pyx_obj_9challenge_6basics_Doodad *__pyx_v_self) {
+      struct __pyx_obj_9challenge_6basics_Doodad *__pyx_v_d = NULL;
+      PyObject *__pyx_r = NULL;
+      __Pyx_RefNannyDeclarations
+      PyObject *__pyx_t_1 = NULL;
+      PyObject *__pyx_t_2 = NULL;
+      int __pyx_lineno = 0;
+      const char *__pyx_filename = NULL;
+      int __pyx_clineno = 0;
+      __Pyx_RefNannySetupContext("clone", 0);
+    
+      /* "challenge/basics.pyx":51
+     * 
+     *     def clone(self):
+     *         d = Doodad(init=False)             # <<<<<<<<<<<<<<
+     * 
+     *         d.thisptr = move(deref(self.thisptr).clone())
+     */
+      __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_GOTREF(__pyx_t_1);
+      if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_init, Py_False) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_9challenge_6basics_Doodad), __pyx_empty_tuple, __pyx_t_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      __pyx_v_d = ((struct __pyx_obj_9challenge_6basics_Doodad *)__pyx_t_2);
+      __pyx_t_2 = 0;
+    
+      /* "challenge/basics.pyx":53
+     *         d = Doodad(init=False)
+     * 
+     *         d.thisptr = move(deref(self.thisptr).clone())             # <<<<<<<<<<<<<<
+     * 
+     *         return d
+     */
+      __pyx_v_d->thisptr = std::move((*__pyx_v_self->thisptr).clone());
+    
+      /* "challenge/basics.pyx":55
+     *         d.thisptr = move(deref(self.thisptr).clone())
+     * 
+     *         return d             # <<<<<<<<<<<<<<
+     * 
+     */
+      __Pyx_XDECREF(__pyx_r);
+      __Pyx_INCREF(((PyObject *)__pyx_v_d));
+      __pyx_r = ((PyObject *)__pyx_v_d);
+      goto __pyx_L0;
+    
+      /* "challenge/basics.pyx":50
+     *             raise NotImplementedError
+     * 
+     *     def clone(self):             # <<<<<<<<<<<<<<
+     *         d = Doodad(init=False)
+     * 
+     */
+    
+      /* function exit code */
+      __pyx_L1_error:;
+      __Pyx_XDECREF(__pyx_t_1);
+      __Pyx_XDECREF(__pyx_t_2);
+      __Pyx_AddTraceback("challenge.basics.Doodad.clone", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __pyx_r = NULL;
+      __pyx_L0:;
+      __Pyx_XDECREF((PyObject *)__pyx_v_d);
+      __Pyx_XGIVEREF(__pyx_r);
+      __Pyx_RefNannyFinishContext();
+      return __pyx_r;
+    }
+
 See also
 ========
 
