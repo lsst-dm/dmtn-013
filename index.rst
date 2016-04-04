@@ -434,14 +434,10 @@ These then use typemaps declared in ``basics_typemaps.i`` such as.
 .. code-block:: cpp
 
     %typemap(out) std::shared_ptr<basics::Doodad> {
-        Py_Initialize();
-        initbasics();
         $result = newDoodadFromSptr($1);
     }
 
     %typemap(in) std::shared_ptr<basics::Doodad> {
-    Py_Initialize();
-    initbasics();
     if (!sptrFromDoodad($input, &$1)) {
         return nullptr;
     }
@@ -473,7 +469,15 @@ Now how is this stuff actually called by the C++ SWIG code?
 Cython has a nice ``public`` keyword as written above. It causes the Cython compiler to generate
 a C++ header file (``basics.h``) for with these function declarations and places that in the build directory. Then it simply gets included by the SWIG build.
 
-A gotcha here is that when calling these functions from C++, the Python module needs to be initialized (or segfaults and other madness ensue). This is what the ``PyInitialize()`` and ``initbasics()`` calls are for. If you ask me it would also need a ``PyFinalize()`` but putting that in breaks everything. Probably these should instead be moved to a place where SWIG does module initialization and finalization.
+A gotcha here is that when calling these functions from C++, the Python module needs to be initialized (or segfaults and other madness ensue).
+
+Therefore in the SWIG module the following needs to be added
+
+.. code-block:: cpp
+
+    %init %{
+        PyImport_ImportModule("challenge.basics");
+    %}
 
 Another problem is linking. In particular, linking on OSX. Since OSX has the concept of bundles (i.e. ``.so``) and dynamic libraries (i.e. ``.dylib``) things get interesting.
 By default Cython builds bundles. Which is the sensible thing to do because extension modules is what bundles are meant for.
