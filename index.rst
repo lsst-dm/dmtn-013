@@ -231,6 +231,7 @@ The C++ class ``Doodad`` also has a method called ``clone()`` that returns a ``u
 which also requires ``std::move`` to be declared in the ``.pxd`` file.
 
 .. code-block:: cython
+
     cdef extern from "<utility>" namespace "std" nogil:
         cdef shared_ptr[Doodad] move(unique_ptr[Doodad])
         cdef shared_ptr[Doodad] move(shared_ptr[Doodad])
@@ -238,6 +239,7 @@ which also requires ``std::move`` to be declared in the ``.pxd`` file.
 There are a few things annoying about this. One is that a separate specialization is to be declared for every type of move and the other is that Cython doesn't like it if two specializations have the same arguments but different return types. The following is thus not allowed.
 
 .. code-block:: cython
+
     cdef extern from "<utility>" namespace "std" nogil:
         cdef unique_ptr[Doodad] move(unique_ptr[Doodad])
         cdef shared_ptr[Doodad] move(unique_ptr[Doodad]) # error!
@@ -411,6 +413,7 @@ This is just to show how it can be done.
 Of course ``begin()`` and ``end()`` have to be declared as well.
 
 .. code-block:: cython
+
     cdef extern from "containers.hpp" namespace "containers":
         cdef cppclass DoodadSet:
             vector[shared_ptr[Doodad]].const_iterator begin() const
@@ -438,10 +441,10 @@ These then use typemaps declared in ``basics_typemaps.i`` such as.
     }
 
     %typemap(in) std::shared_ptr<basics::Doodad> {
-    if (!sptrFromDoodad($input, &$1)) {
-        return nullptr;
+        if (!sptrFromDoodad($input, &$1)) {
+            return nullptr;
+        }
     }
-}
 
 The key to Cython / SWIG interoperability is of course in the functions ``newDoodadFromSptr`` (that should take a ``shared_ptr<Doodad>`` and return a Python object) and ``sptrFromDoodad`` (which does the opposite).
 
