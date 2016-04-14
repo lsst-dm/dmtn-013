@@ -2,7 +2,7 @@
 DMTN-013 Wrapping C++ with Cython
 #################################
 
-ThThis document describes how C++ classes can be wrapped using Cython.
+This document describes how C++ classes can be wrapped using Cython.
 
 View this technote at http://dmtn-013.lsst.io or see a preview of the
 current version in `this repo`_
