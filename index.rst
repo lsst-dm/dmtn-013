@@ -28,18 +28,18 @@ Given a simple C++ class:
 .. code-block:: cpp
     :name: basics.cpp
 
+    #include <string>
+    
     namespace basics {
-
+    
     class Doodad {
     public:
-        Doodad(std::string const & name_, int value_);
-        
+        Doodad(std::string const & name_, int value_) : name{name_}, value{value_} {};
+            
         std::string name;
         int value;
     };
-    
-    } // namespace basics
-
+        
 a basic Cython wrapper for this would look like this.
 
 .. code-block:: cython
@@ -286,8 +286,8 @@ where the functions that are called look like:
 
 those functions are simply for convenience since the type of ``other`` is not known (and thus not guaranteed to have a ``thisptr``). An alternative is casting at runtime (see SWIG example below).
 
-Containers and iterators
-^^^^^^^^^^^^^^^^^^^^^^^^
+Containers
+^^^^^^^^^^
 
 Because of the nice availability of ``vector`` and ``map`` in Cython writing conversion methods to Python ``list`` and ``dict``, given the methods ``as_vector()`` and ``as_map()`` is easy.
 
