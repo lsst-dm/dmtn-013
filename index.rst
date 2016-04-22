@@ -23,23 +23,31 @@ In my opinion this is both Cythons main strength as well as one of its weaknesse
 A quick example
 ===============
 
-Given a simple C++ class:
+Given some simple C++
 
 .. code-block:: cpp
-    :name: basics.cpp
 
-    #include <string>
+    #ifndef BASICS_H
+    #define BASICS_H
     
+    #include <string>
+        
     namespace basics {
     
+    int addOne(int x);
+        
     class Doodad {
     public:
         Doodad(std::string const & name_, int value_) : name{name_}, value{value_} {};
-            
+                
         std::string name;
         int value;
     };
-        
+    
+    } // namespace basics
+    
+    #endif
+
 a basic Cython wrapper for this would look like this.
 
 .. code-block:: cython
@@ -51,12 +59,17 @@ a basic Cython wrapper for this would look like this.
     from libcpp.string cimport string
     
     cdef extern from "basics.hpp" namespace "basics":
+        int addOne(int)
+
         cdef cppclass Doodad:
             Doodad(string, int)
     
             string name
             int value
-    
+
+    def pyAddOne(x):
+        return addOne(x)
+
     cdef class PyDoodad:
         cdef unique_ptr[Doodad] thisptr
     
@@ -161,6 +174,96 @@ The remaining code:
     ...
 
 deals with Python attributes and should be obvious.
+
+Inspecting (part of) the wrapper code
+-------------------------------------
+
+From a Cython input file the Cython compiler typically generates a single
+C++ source file as output (without any additional Python code). This is then
+directly compiled into a CPython extension module.
+Unfortunately the whole wrapper is 2697 lines long and not very human readable.
+Therefore we restrict ourselves to the wrapper for ``addOne``.
+
+Besides a lot of module initialization code and other boilerplate the wrapper
+consists of two parts. The outer ``pyAddOne`` function:
+
+.. code-block:: cpp
+
+    /* "basics.pyx":4
+     *     int addOne(int)
+     * 
+     * def pyAddOne(x):             # <<<<<<<<<<<<<<
+     *     return addOne(x)
+     * 
+     */
+
+    /* Python wrapper */
+    static PyObject *__pyx_pw_6basics_1pyAddOne(PyObject *__pyx_self, PyObject *__pyx_v_x); /*proto*/
+    static PyMethodDef __pyx_mdef_6basics_1pyAddOne = {"pyAddOne", (PyCFunction)__pyx_pw_6basics_1pyAddOne, METH_O, 0};
+    static PyObject *__pyx_pw_6basics_1pyAddOne(PyObject *__pyx_self, PyObject *__pyx_v_x) {
+      PyObject *__pyx_r = 0;
+      __Pyx_RefNannyDeclarations
+      __Pyx_RefNannySetupContext("pyAddOne (wrapper)", 0);
+      __pyx_r = __pyx_pf_6basics_pyAddOne(__pyx_self, ((PyObject *)__pyx_v_x));
+    
+      /* function exit code */
+      __Pyx_RefNannyFinishContext();
+      return __pyx_r;
+    }
+
+and a wrapper around the call to ``addOne`` itself.
+    
+.. code-block:: cpp
+
+    static PyObject *__pyx_pf_6basics_pyAddOne(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_x) {
+      PyObject *__pyx_r = NULL;
+      __Pyx_RefNannyDeclarations
+      int __pyx_t_1;
+      PyObject *__pyx_t_2 = NULL;
+      int __pyx_lineno = 0;
+      const char *__pyx_filename = NULL;
+      int __pyx_clineno = 0;
+      __Pyx_RefNannySetupContext("pyAddOne", 0);
+    
+      /* "basics.pyx":5
+     * 
+     * def pyAddOne(x):
+     *     return addOne(x)             # <<<<<<<<<<<<<<
+     * 
+     */
+      __Pyx_XDECREF(__pyx_r);
+      __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_x); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 5; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __pyx_t_2 = __Pyx_PyInt_From_int(basics::addOne(__pyx_t_1)); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 5; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_GOTREF(__pyx_t_2);
+      __pyx_r = __pyx_t_2;
+      __pyx_t_2 = 0;
+      goto __pyx_L0;
+    
+      /* "basics.pyx":4
+     *     int addOne(int)
+     * 
+     * def pyAddOne(x):             # <<<<<<<<<<<<<<
+     *     return addOne(x)
+     * 
+     */
+    
+      /* function exit code */
+      __pyx_L1_error:;
+      __Pyx_XDECREF(__pyx_t_2);
+      __Pyx_AddTraceback("basics.pyAddOne", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __pyx_r = NULL;
+      __pyx_L0:;
+      __Pyx_XGIVEREF(__pyx_r);
+      __Pyx_RefNannyFinishContext();
+      return __pyx_r;
+    }
+
+Please note that all the calls to ``RefNanny`` as well as ``__Pyx_GOTREF`` and ``__Pyx_GIVEREF``
+simply check Cythons own reference counting. They do not reference count user code.
+Actually, I am not quite sure why they are there at all, since the Cython docs say that they
+should only be generated when the code is compiled with ``-DCYTHON_REFNANNY`` (which it is not).
+The rest of the code should be pretty self explanatory.
+
 
 Solving the C++/Python bindings challenge with Cython
 =====================================================
@@ -355,7 +458,7 @@ and ``basics.pxd``:
     from _basics cimport Doodad as _Doodad
 
     cdef class Doodad:
-        cdef shared_ptr[Doodad] thisptr
+        cdef shared_ptr[_Doodad] thisptr
 
         ...
 
@@ -539,116 +642,6 @@ This can be done by inserting the following in the packages ``__init__.py`` file
     from . import basics
 
 This approach is better since it does not require separate handling of OSX.
-
-Example of generated code
-=========================
-
-From a Cython input file the Cython compiler typically generates a single
-C++ source file as output (without any additional Python code). This is then
-directly compiled into a CPython extension module.
-For example, from the ``Doodad`` method wrapper ``clone()`` which is defined
-in the ``.pyx`` file as:
-
-.. code-block:: cython
-
-    def clone(self):
-        d = Doodad(init=False)
-
-        d.thisptr = move(deref(self.thisptr).clone())
-
-        return d
-
-the generated code looks like this.
-
-.. code-block:: cpp
-
-    /* "challenge/basics.pyx":50
-     * 
-     *     def clone(self):             # <<<<<<<<<<<<<<
-     *         d = Doodad(init=False)
-     * 
-     */
-    
-    /* Python wrapper */
-    static PyObject *__pyx_pw_9challenge_6basics_6Doodad_5clone(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-    static PyObject *__pyx_pw_9challenge_6basics_6Doodad_5clone(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
-      PyObject *__pyx_r = 0;
-      __Pyx_RefNannyDeclarations
-      __Pyx_RefNannySetupContext("clone (wrapper)", 0);
-      __pyx_r = __pyx_pf_9challenge_6basics_6Doodad_4clone(((struct __pyx_obj_9challenge_6basics_Doodad *)__pyx_v_self));
-    
-      /* function exit code */
-      __Pyx_RefNannyFinishContext();
-      return __pyx_r;
-    }
-    
-    static PyObject *__pyx_pf_9challenge_6basics_6Doodad_4clone(struct __pyx_obj_9challenge_6basics_Doodad *__pyx_v_self) {
-      struct __pyx_obj_9challenge_6basics_Doodad *__pyx_v_d = NULL;
-      PyObject *__pyx_r = NULL;
-      __Pyx_RefNannyDeclarations
-      PyObject *__pyx_t_1 = NULL;
-      PyObject *__pyx_t_2 = NULL;
-      int __pyx_lineno = 0;
-      const char *__pyx_filename = NULL;
-      int __pyx_clineno = 0;
-      __Pyx_RefNannySetupContext("clone", 0);
-    
-      /* "challenge/basics.pyx":51
-     * 
-     *     def clone(self):
-     *         d = Doodad(init=False)             # <<<<<<<<<<<<<<
-     * 
-     *         d.thisptr = move(deref(self.thisptr).clone())
-     */
-      __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      __Pyx_GOTREF(__pyx_t_1);
-      if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_init, Py_False) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_9challenge_6basics_Doodad), __pyx_empty_tuple, __pyx_t_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      __Pyx_GOTREF(__pyx_t_2);
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __pyx_v_d = ((struct __pyx_obj_9challenge_6basics_Doodad *)__pyx_t_2);
-      __pyx_t_2 = 0;
-    
-      /* "challenge/basics.pyx":53
-     *         d = Doodad(init=False)
-     * 
-     *         d.thisptr = move(deref(self.thisptr).clone())             # <<<<<<<<<<<<<<
-     * 
-     *         return d
-     */
-      __pyx_v_d->thisptr = std::move((*__pyx_v_self->thisptr).clone());
-    
-      /* "challenge/basics.pyx":55
-     *         d.thisptr = move(deref(self.thisptr).clone())
-     * 
-     *         return d             # <<<<<<<<<<<<<<
-     * 
-     */
-      __Pyx_XDECREF(__pyx_r);
-      __Pyx_INCREF(((PyObject *)__pyx_v_d));
-      __pyx_r = ((PyObject *)__pyx_v_d);
-      goto __pyx_L0;
-    
-      /* "challenge/basics.pyx":50
-     *             raise NotImplementedError
-     * 
-     *     def clone(self):             # <<<<<<<<<<<<<<
-     *         d = Doodad(init=False)
-     * 
-     */
-    
-      /* function exit code */
-      __pyx_L1_error:;
-      __Pyx_XDECREF(__pyx_t_1);
-      __Pyx_XDECREF(__pyx_t_2);
-      __Pyx_AddTraceback("challenge.basics.Doodad.clone", __pyx_clineno, __pyx_lineno, __pyx_filename);
-      __pyx_r = NULL;
-      __pyx_L0:;
-      __Pyx_XDECREF((PyObject *)__pyx_v_d);
-      __Pyx_XGIVEREF(__pyx_r);
-      __Pyx_RefNannyFinishContext();
-      return __pyx_r;
-    }
 
 See also
 ========
