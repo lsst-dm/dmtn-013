@@ -1,7 +1,5 @@
 :tocdepth: 1
 
-This document is still a draft. Please do not refer to it yet!
-
 All LSST code currently uses `SWIG <http://www.swig.org>`_ to generate Python wrappers around C++ code. This document investigates using `Cython <www.cython.org>`_ as an alternative.
 The prime motivation for this is that `AstroPy <www.astropy.org>`_ uses Cython and a closer collaboration and code sharing with AstroPy is currently being evaluated.
 To start the investigation Jim Bosch has written a `C++/Python Bindings Challenge <https://github.com/TallJimbo/python-cpp-challenge>`_. 
