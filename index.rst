@@ -2,21 +2,21 @@
 
 All LSST code currently uses `SWIG <http://www.swig.org>`_ to generate Python wrappers around C++ code. This document investigates using `Cython <www.cython.org>`_ as an alternative.
 The prime motivation for this is that `AstroPy <www.astropy.org>`_ uses Cython and a closer collaboration and code sharing with AstroPy is currently being evaluated.
-To start the investigation Jim Bosch has written a `C++/Python Bindings Challenge <https://github.com/TallJimbo/python-cpp-challenge>`_. 
+To start the investigation Jim Bosch has written a `C++/Python Bindings Challenge <https://github.com/lsst-dm/python-cpp-challenge>`_.
 It consists of "a small suite of C++ classes designed to highlight any of the most common challenges involved in providing Python bindings ot a C++ library, as well as a set of Python unit tests that attempt to measure the quality of the resulting bindings".
 Concretely, this document then describes the (partial) Cython solution to this challenge.
 
 About the scope of this document
 ================================
 
-Although this document contains some examples of how to wrap C++ with Cython and might help to get you started it is not meant to be a full tutorial by any means. The examples are just there to get some context when describing the various things that I encountered. If you are looking for comprehensive information about Cython and C++ please have a look at some of the documents linked below instead.
+Although this document contains some examples of how to wrap C++ with Cython and might help to get you started, it is by no means intended to be a full tutorial. The examples are just there to get some context when describing the various things that I encountered. If you are looking for comprehensive information about Cython and C++ please have a look at some of the documents linked below instead.
 
 About Cython
 ============
 
-Unlike most C/C++ Python wrapping solutions, Cython is not just a wrapper tool. Instead it is a full featured programming language with a Python like syntax but with optional added static typing. Additionally Cython provides a compiler that translates Cython code into C or C++ code which can subsequently be compiled to a Python extension module by a standard C/C++ compiler.
+Unlike most C/C++ Python wrapping solutions, Cython is not just a wrapper tool. Instead, it is a full-featured programming language with a Python-like syntax, but with optional added static typing. Additionally, Cython provides a compiler that translates Cython code into C or C++ code, which can subsequently be compiled to a Python extension module by a standard C/C++ compiler.
 
-In my opinion this is both Cythons main strength as well as one of its weaknesses. On the plus side having a full blown programming language available that closely matches Python enables the resulting wrapper modules to be very Pythonic. Probably more so than any other wrapper tool allows. On the other hand it means a lot of wrapping code has to be written manually. Because the wrapping language is closer to Python then it is to C++ it is sometimes a little difficult to figure out what exactly is going on behind the scenes and not everything translates one-to-one.
+In my opinion this is both Cython's main strength as well as one of its weaknesses. On the plus side having a full-blown programming language available that closely matches Python enables the resulting wrapper modules to be very Pythonic - probably more so than any other wrapper tool allows. On the other hand, it means a lot of wrapping code has to be written manually. Because the wrapping language is closer to Python then it is to C++ it is sometimes a little difficult to figure out what exactly is going on behind the scenes and not everything translates one-to-one.
 
 A quick example
 ===============
@@ -111,7 +111,7 @@ Note that there are other ways to compile the code, some of which even work on t
         ext_modules=cythonize(basics_module)
     )
 
-Which can be built with:
+This can be built with:
 
 .. code-block:: bash
 
@@ -126,7 +126,7 @@ Now let's examine the wrapper code step by step.
 
     from cython.operator cimport dereference as deref
 
-This line brings in the dereference "operator". In Cython a pointer dereference, ``*p`` can be written either as ``p[0]`` or ``deref(p)``. I prefer the latter since it seems to work in more contexts. If it is considered too verbose just change the import line to ``... cimport dereference as d``.
+This line brings in the dereference "operator". In Cython a pointer dereference, ``*p`` can be written either as ``p[0]`` or ``deref(p)``. I prefer the latter since it seems to work in more contexts. If it is considered too verbose, we can just change the import line to ``... cimport dereference as d``.
 
 The next two lines:
 
@@ -144,7 +144,7 @@ The block starting with:
     cdef extern from "basics.hpp" namespace "basics":
         ...
 
-declares the C++ types (and functions) to be usable from Cython. The only thing this does is place the declarations in the resulting C/C++ file with an ``extern`` modifier. Because of this it is sometimes confusingly the users responsibility of ensuring that the declarations here match those on the C++ side. Otherwise this is only discovered at linking. This tasks is further complicated because C++ declarations cannot always be copied entirely verbatim to Cython, which doesn't allow ``*``, ``&`` or qualifiers such as ``const`` in all places. But this is a minor nuisance which decreases with increasing understanding. Note that Cython also supports nested namespaces, but only one namespace can be used per extern block.
+declares the C++ types (and functions) to be usable from Cython. The only thing this does is place the declarations in the resulting C/C++ file with an ``extern`` modifier. Because of this it is sometimes confusingly the users responsibility of ensuring that the declarations here match those on the C++ side - otherwise this is only discovered at link time. This task is further complicated because C++ declarations cannot always be copied entirely verbatim to Cython, which doesn't allow ``*``, ``&`` or qualifiers such as ``const`` in all places. But this is a minor nuisance which decreases with increasing understanding. Note that Cython also supports nested namespaces, but only one namespace can be used per extern block.
 
 Now let's move on to the class definition.
 
@@ -179,7 +179,7 @@ Inspecting (part of) the wrapper code
 From a Cython input file the Cython compiler typically generates a single
 C++ source file as output (without any additional Python code). This is then
 directly compiled into a CPython extension module.
-Unfortunately the whole wrapper is 2697 lines long and not very human readable.
+Unfortunately the whole wrapper is 2697 lines long and not very human-readable.
 Therefore we restrict ourselves to the wrapper for ``addOne``.
 
 Besides a lot of module initialization code and other boilerplate the wrapper
@@ -257,10 +257,9 @@ and a wrapper around the call to ``addOne`` itself.
     }
 
 Please note that all the calls to ``RefNanny`` as well as ``__Pyx_GOTREF`` and ``__Pyx_GIVEREF``
-simply check Cythons own reference counting. They do not reference count user code.
-Actually, I am not quite sure why they are there at all, since the Cython docs say that they
-should only be generated when the code is compiled with ``-DCYTHON_REFNANNY`` (which it is not).
-The rest of the code should be pretty self explanatory.
+simply check Cython's own reference counting. They do not reference-count user code.
+Actually, I am not quite sure why they are there at all, since the Cython docs say that they should only be generated when the code is compiled with ``-DCYTHON_REFNANNY`` (which it is not).
+The rest of the code should be pretty self-explanatory.
 
 
 Solving the C++/Python bindings challenge with Cython
@@ -270,7 +269,7 @@ The previous section gave a quick overview of wrapping a C++ class with Cython. 
 
 It contains four C++ source files which are to be compiled into three different Python modules (with interdependencies).
 
-* ``basics`` contains a class ``Doodad``, a class ``Secret`` and a struct ``WhatsIt``. The class ``WhatsIt`` should be visible to Python only as a tuple and ``Secret`` can only be constructed by ``Doodad``, it is to be passed around in Python as an opaque object. ``Doodad`` is the main class to be wrapped.
+* ``basics`` contains a class ``Doodad``, a class ``Secret`` and a struct ``WhatsIt``. The class ``WhatsIt`` should be visible to Python only as a tuple, and ``Secret`` can only be constructed by ``Doodad``; it is to be passed around in Python as an opaque object. ``Doodad`` is the main class to be wrapped.
 
 * ``extensions`` contains a templated class ``Thingamajig`` that inherits from ``Doodad``.
 
@@ -311,9 +310,9 @@ This approach is more Pythonic IMHO but does require some duplicate code (althou
 Getting a const object
 ^^^^^^^^^^^^^^^^^^^^^^
 
-In the challenge the previously mentioned ``ImmutableDoodad`` is obtained from a ``Doodad`` instance by calling its ``.get_const()`` method. In C++ this returns a ``shared_ptr<const Doodad>``. The easiest way of dealing with this is to simply change the backing smart pointer type in the Python object to a ``shared_ptr`` as well. This simply follows the standard C++ rule of using ``shared_ptr`` for things that you know are going to be shared.
+In the challenge, an instance of the previously mentioned ``ImmutableDoodad`` is obtained from by calling the ``Doodad.get_const()`` static method. In C++ this returns a ``shared_ptr<const Doodad>``. The easiest way of dealing with this is to simply change the backing smart pointer type in the Python object to a ``shared_ptr`` as well. This simply follows the standard C++ rule of using ``shared_ptr`` for things that you know are going to be shared.
 
-Note that if this method didn't exist on the C++ level we should stick to ``unique_ptr``.
+Note that if methods using ``shared_ptr`` didn't exist on the C++ level we could stick to ``unique_ptr``.
 
 Cloning
 ^^^^^^^
@@ -350,13 +349,13 @@ Which was fortunately not needed in this case but can be really annoying when it
 
 But hey, in this case it works!
 
-Notice also the ``init=False``. This, rather ugly, thing is needed because:
+Notice also the ``init=False``. This (rather ugly) thing is needed because:
 
 * C++ ``Doodad`` has no default constructor, and
 * ``__init__`` has two arguments with a default value.
 
 You need some way to tell Cython to make a Python ``Doodad`` with an uninitialized ``shared_ptr``.
-Ideally one would want to use a factory ``Doodad.__new__(Doodad)`` thing here, but for some reason this doesn't play well with Cython (specifically, when called like that it doesn't seem to add a ``thisptr``).
+Ideally one would want to use a factory ``Doodad.__new__(Doodad)`` here, but for some reason this doesn't play well with Cython (specifically, when called like that it doesn't seem to add a ``thisptr``).
 
 Comparison operators
 ^^^^^^^^^^^^^^^^^^^^
@@ -420,7 +419,7 @@ Because of the nice availability of ``vector`` and ``map`` in Cython writing con
 It would have been even easier if the ``vector`` or ``map`` only included items that were already known to Cython. In that case we could simply return the result directly, without having to build up a new list or dict.
 In this case however Cython does not know what Python type to put in for the elements. Perhaps this can be fixed somehow?
 
-Inter module dependencies
+Inter-Module dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Note that in the previous example something funny is going on.
@@ -571,7 +570,7 @@ You may also notice ``move`` which is declared as described above (in case you s
 
 Now how is this stuff actually called by the C++ SWIG code?
 Cython has a nice ``public`` keyword as written above. It causes the Cython compiler to generate
-a C++ header file (``basics.h``) for with these function declarations and places that in the build directory. Then it simply gets included by the SWIG build.
+a C++ header file (``basics.h``) for these function declarations and places that in the build directory. Then it simply gets included by the SWIG build.
 
 A gotcha here is that when calling these functions from C++, the Python module needs to be initialized (or segfaults and other madness ensue).
 
