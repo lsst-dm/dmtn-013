@@ -534,7 +534,7 @@ The SWIG wrapped extension module ``converters`` contains functions like.
 
 These then use typemaps declared in ``basics_typemaps.i`` such as.
 
-.. code-block:: cpp
+.. code-block:: swig
 
     %typemap(out) std::shared_ptr<basics::Doodad> {
         $result = newDoodadFromSptr($1);
@@ -576,7 +576,7 @@ A gotcha here is that when calling these functions from C++, the Python module n
 
 Therefore in the SWIG module the following needs to be added
 
-.. code-block:: cpp
+.. code-block:: swig
 
     %init %{
         PyImport_ImportModule("challenge.basics");
