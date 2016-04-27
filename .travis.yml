@@ -1,0 +1,19 @@
+sudo: false
+language: python
+matrix:
+  include:
+    # This is the ltd-mason documentation deployment build
+    - python: "3.5"
+      env: LTD_MASON_BUILD=true
+install:
+  - pip install -r requirements.txt
+  - pip install ltd-mason==0.2.0.rc0
+script:
+  - sphinx-build -b html -a -n -W . _build/html
+  - ltd-mason-travis --html-dir _build/html
+env:
+  global:
+    - LTD_MASON_BUILD=false  # disable builds in regular text matrix
+    - LTD_MASON_PRODUCT="dmtn-013"
+    # travis encrypt "LTD_MASON_AWS_ID=... LTD_MASON_AWS_SECRET=... LTD_KEEPER_URL=... LTD_KEEPER_USER=... LTD_KEEPER_PASSWORD=..." --add env.global 
+    - secure: "edPD6RMPjPCvuuqtXc3nmQ2T5tvVWWFnhC957tmqyzvFS++cEZLXRCRRenlxd+9ygm7qONWXtcvJeyWiaVi9pooeFpIKlcVWeJQAZD+oLsONrFBzdPQrP8ObaeD845T9meFR+k48uFpvB2yHc3e0ZUczhxJbKUxSQzlX1xRIVh9YwwWCLbBitNHcTNsnNDfdvxFw5w3CTkWdd8j6962eOzOQHgO/Ta5B71Ab/0XwVWEh7C5mE3jNq4GRLlEXp9vyDr0DzHihVN/XkMMeSTrUj20pHePvxJh0lJi6zmseX5RCKu1hVe7dvv2FUySVB/BzW6O4kFgS7L3ynaF5jGhiIjkGMwIgd+o1ucDbuPtFqk6e1SBGwc2y2ZVijN/D2ZeQOWGDx2lUrVbdmP3MW5YQDuHfep/8H0npmvd/pUlnIjT/cxSMVW0rQlH0O+ZyTbR30lX1JRCzHgjDqX78m1JHaaOdAjcJ+3GfLRr7vWaCr4mb9NbKMCgtkt6efN6E/cfTB8xbFC0x/TF2QcKIWGQKWxCnGuXgqXlOsoR367kgqWps5l5jGmndth24/sK0UWBlqE9Vkhi3ea58Uprh6RjlMvG/6syAhhsDR1u+T48T3ABpKJHhkrbRncxpiWyki3s9t8z85MLD2dBqPF8RanaeI/86ecoNln1imcWRViCwyFQ="
